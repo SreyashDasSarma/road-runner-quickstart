@@ -2,7 +2,9 @@ package org.firstinspires.ftc.teamcode.drive.SampleAutonPaths;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -11,12 +13,14 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
 public class HardwareFile {
     private LinearOpMode linearOpMode;
-    public DcMotor intakeR, intakeL, shooter;
+    public DcMotor intakeR, intakeL;
+    public DcMotorEx shooter;
 
     public CRServo in1, in2;
     public Servo arm1, arm2;
     public Servo grabber, grabber2, slapper, tilter, shooterflap;
     public Servo rightIntakeHolder, leftIntakeHolder;
+    public ColorSensor magsense;
     HardwareMap map;
     public SampleMecanumDrive driveTrain;
     public static Pose2d robotPose = new Pose2d();
@@ -28,8 +32,9 @@ public class HardwareFile {
     private void construct(HardwareMap imported){
         map = imported;
         intakeR = map.get(DcMotor.class, "intakeR");
+        magsense = map.get(ColorSensor.class,"range");
         intakeL = map.get(DcMotor.class, "intakeL");
-        shooter = map.get(DcMotor.class, "fw");
+        shooter = map.get(DcMotorEx.class, "fw");
         in1 = map.crservo.get("in1");
         in2 = map.crservo.get("in2");
         in1.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -44,6 +49,8 @@ public class HardwareFile {
         leftIntakeHolder = map.get(Servo.class,"wallL");
         rightIntakeHolder = map.get(Servo.class,"wallR");
         intakeL.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
     }
     public void wobbleArmUp() {
@@ -74,9 +81,9 @@ public class HardwareFile {
         in2.setPower(intakeSpeed);
     }
 
-    public void shooter(double shooterpower){
+    /*public void shooter(double shooterpower){
         shooter.setPower(shooterpower);
-    }
+    }*/
     public void magup(){
         tilter.setPosition(1);
     }
