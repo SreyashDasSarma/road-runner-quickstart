@@ -79,11 +79,11 @@ public class SampleAutonPathFar extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
         drive2 = new HardwareFile(hardwareMap);
-        Pose2d startPose = new Pose2d(-63, -24, 0);
+        Pose2d startPose = new Pose2d(-63, -48, Math.toRadians(15));
 
         drive.setPoseEstimate(startPose);
         Trajectory traj = drive.trajectoryBuilder(startPose)
-                .splineTo(new Vector2d(-20, -27), 0)
+                .splineTo(new Vector2d(-20, -34), Math.toRadians(0))
                 .build();
 
         Trajectory traj0ring = drive.trajectoryBuilder(traj.end())
@@ -125,9 +125,8 @@ public class SampleAutonPathFar extends LinearOpMode {
         drive.followTrajectory(traj);
         drive2.leftIntakeHolder.setPosition(0.8);
         drive2.rightIntakeHolder.setPosition(0.8);
-        shooter();
+        shooter(3);
         //0 ring
-        drive2.intake(1);
         if(height==0) {
             drive.followTrajectory(traj0ring);
             drive2.magdown();
@@ -136,6 +135,9 @@ public class SampleAutonPathFar extends LinearOpMode {
             drive2.leftIntakeHolder.setPosition(1);
             drive2.rightIntakeHolder.setPosition(0);
         }else if(height==1){
+            drive2.intake(1);
+            sleep(500);
+            shooter(1);
             drive2.magdown();
             drive.followTrajectory(traj1ring);
             wobbledrop();
@@ -143,6 +145,9 @@ public class SampleAutonPathFar extends LinearOpMode {
             drive2.leftIntakeHolder.setPosition(1);
             drive2.rightIntakeHolder.setPosition(0);
         }else if(height==4){
+            drive2.intake(1);
+            sleep(1500);
+            shooter(3);
             drive2.magdown();
             drive.followTrajectory(traj4ring);
             wobbledrop();
@@ -177,9 +182,9 @@ public class SampleAutonPathFar extends LinearOpMode {
                 for (Recognition recognition : updatedRecognitions) {
                     telemetry.addData(String.format("label (%d)", i), recognition.getLabel());
                     //telemetry.addData(String.format("  left,top (%d)", i), "%.03f , %.03f",
-                           // recognition.getLeft(), recognition.getTop());
+                    // recognition.getLeft(), recognition.getTop());
                     //telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
-                           // recognition.getRight(), recognition.getBottom());
+                    // recognition.getRight(), recognition.getBottom());
                     telemetry.addData("",recognition.getLabel()=="Quad");
                     if (recognition.getLabel().equals("Quad")){
                         height=4;
@@ -204,10 +209,11 @@ public class SampleAutonPathFar extends LinearOpMode {
         drive2.release();
         sleep(100);
     }
-    public void shooter(){
+    public void shooter(int rounds){
+        drive2.intake(0);
         drive2.shooter(1);
         sleep(2000);
-        for(int i=0;i<=3;++i){
+        for(int i=0;i<=rounds;++i){
             drive2.magup();
             drive2.magup();
             drive2.slapper.setPosition(0.35);
@@ -216,5 +222,6 @@ public class SampleAutonPathFar extends LinearOpMode {
             sleep(1000);
         }
         drive2.shooter(0);
+        drive2.magdown();
     }
 }
