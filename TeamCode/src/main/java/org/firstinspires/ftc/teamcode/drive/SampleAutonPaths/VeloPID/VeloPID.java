@@ -9,16 +9,17 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @Config
 @TeleOp
 public class VeloPID extends LinearOpMode {
-    public static PIDCoefficients MOTOR_VELO_PID = new PIDCoefficients(0, 0, 0);
+    public static PIDCoefficients MOTOR_VELO_PID = new PIDCoefficients(0.1, 0.1, 0.1);
 
     public static double kV = 1 / TuningController.rpmToTicksPerSecond(TuningController.MOTOR_MAX_RPM);
-    public static double kA = 0;
-    public static double kStatic = 0;
+    public static double kA = 1;
+    public static double kStatic = 1;
 
     private final FtcDashboard dashboard = FtcDashboard.getInstance();
 
@@ -29,14 +30,14 @@ public class VeloPID extends LinearOpMode {
         // Change my id
         DcMotorEx myMotor1 = hardwareMap.get(DcMotorEx.class, "fw1");
         DcMotorEx myMotor2 = hardwareMap.get(DcMotorEx.class, "fw");
-
+        Servo tilter = hardwareMap.get(Servo.class, "tilt");
+        Servo slapper = hardwareMap.get(Servo.class, "mag");
         // Reverse as appropriate
         // myMotor1.setDirection(DcMotorSimple.Direction.REVERSE);
         // myMotor2.setDirection(DcMotorSimple.Direction.REVERSE);
 
         myMotor1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        myMotor2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
+        myMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         for (LynxModule module : hardwareMap.getAll(LynxModule.class)) {
             module.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }
@@ -56,12 +57,12 @@ public class VeloPID extends LinearOpMode {
         telemetry.clearAll();
 
         waitForStart();
-
+        tilter.setPosition(1);
         if (isStopRequested()) return;
 
         tuningController.start();
         veloTimer.reset();
-
+        int count=-1;
         while (!isStopRequested() && opModeIsActive()) {
             double targetVelo = tuningController.update();
 
@@ -73,8 +74,8 @@ public class VeloPID extends LinearOpMode {
 
             telemetry.addData("targetVelocity", targetVelo);
 
-            double motorPos = myMotor1.getCurrentPosition();
-            double motorVelo = myMotor1.getVelocity();
+            double motorPos = myMotor2.getCurrentPosition();
+            double motorVelo = myMotor2.getVelocity();
 
             double power = veloController.update(motorPos, motorVelo);
             myMotor1.setPower(power);
@@ -87,10 +88,17 @@ public class VeloPID extends LinearOpMode {
 
                 veloController = new VelocityPIDF(MOTOR_VELO_PID, kV, kA, kStatic);
             }
-
+            if(motorVelo>1750&&count<4){
+                //if(count>=0) {
+                    slapper.setPosition(0.35);
+                    sleep(100);
+                    slapper.setPosition(0.5);
+                    sleep(200);
+                //}
+                count=(count+1);
+            }
             telemetry.addData("velocity", motorVelo);
             telemetry.addData("error", targetVelo - motorVelo);
-
             telemetry.addData("upperBound", TuningController.rpmToTicksPerSecond(TuningController.TESTING_MAX_SPEED * 1.15));
             telemetry.addData("lowerBound", 0);
             telemetry.update();
