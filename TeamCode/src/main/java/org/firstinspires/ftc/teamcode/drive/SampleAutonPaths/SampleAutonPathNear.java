@@ -95,11 +95,12 @@ public class SampleAutonPathNear extends LinearOpMode {
                 .build();
 */
         Trajectory trajpickup = drive.trajectoryBuilder(startPose)
-                .splineTo(new Vector2d(-20 , -40),  Math.toRadians(0))
-                .splineTo(new Vector2d(-50,-48), 0)
+                /*.splineTo(new Vector2d(-20 , -40),  Math.toRadians(0))
+                .splineTo(new Vector2d(-50,-48), 0)*/
+                .splineTo(new Vector2d(-12,-30), Math.toRadians(5))
                 .build();
 
-        Trajectory traj0ring = drive.trajectoryBuilder(startPose)
+        Trajectory traj0ring = drive.trajectoryBuilder(trajpickup.end())
                 .splineTo(new Vector2d(12 , -40),  Math.toRadians(90))
                 .build();
 
@@ -126,6 +127,7 @@ public class SampleAutonPathNear extends LinearOpMode {
         initVuforia();
         initTfod();
         camera();
+        drive2.grab();
         waitForStart();
         if (isStopRequested()) return;
         camera();
@@ -134,11 +136,13 @@ public class SampleAutonPathNear extends LinearOpMode {
         sleep(2500);
         drive2.leftIntakeHolder.setPosition(0);
         drive2.rightIntakeHolder.setPosition(1);
-        /*drive2.shooterflap.setPosition(0.4) ;
-        drive.followTrajectory(trajoutpow);*/
+        /*drive2.shooterflap.setPosition(0.4) ;*/
+        drive.followTrajectory(trajpickup);
         drive2.leftIntakeHolder.setPosition(0.8);
         drive2.rightIntakeHolder.setPosition(0.8);
         shooter(3);
+        //
+        // sleep(5000);
         //drive.followTrajectory(trajmidpow);
         //shooter(1);
         //drive.followTrajectory(trajinpow);
@@ -154,8 +158,8 @@ public class SampleAutonPathNear extends LinearOpMode {
             drive2.rightIntakeHolder.setPosition(0);
         }else if(height==1){
             drive2.magdown();
-            drive.followTrajectory(trajpickup);
-            shooter(3);
+            /*drive.followTrajectory(trajpickup);
+            shooter(3);*/
             drive2.magdown();
             drive.followTrajectory(traj1ring);
             wobbledrop();
