@@ -1,115 +1,94 @@
 package org.firstinspires.ftc.teamcode.drive.SampleAutonPaths.VeloPID;
 
-import com.acmerobotics.dashboard.config.Config;
-import com.noahbres.jotai.StateMachine;
-import com.noahbres.jotai.StateMachineBuilder;
-import com.qualcomm.robotcore.util.ElapsedTime;
+import com.acmerobotics.roadrunner.control.PIDCoefficients;
+import com.acmerobotics.roadrunner.control.PIDFController;
+import com.acmerobotics.roadrunner.kinematics.Kinematics;
+import com.qualcomm.robotcore.util.MovingStatistics;
 
-@Config
-public class TuningController {
-    public static double MOTOR_TICKS_PER_REV = 28;
-    public static double MOTOR_MAX_RPM = 6000;
-    public static double MOTOR_GEAR_RATIO = 0.5; // output (wheel) speed / input (motor) speed
+public class VelocityPIDF {
+    private static final int ACCEL_SAMPLES = 3;
+    private static final double VELOCITY_EPSILON = 20 + 1e-6;
 
-    public static double TESTING_MAX_SPEED = 0.5 * MOTOR_MAX_RPM;
-    public static double TESTING_MIN_SPEED = 0.3 * MOTOR_MAX_RPM;
+    private PIDFController controller;
 
+    private MovingStatistics accelSamples;
 
-    // These are prefixed with "STATE1", "STATE2", etc. because Dashboard displays variables in
-    // alphabetical order. Thus, we preserve the actual order of the process
-    // Then we append Z just because we want it to show below the MOTOR_ and TESTING_ because
-    // these settings aren't as important
-    public static double ZSTATE1_RAMPING_UP_DURATION = 3.5;
-    public static double ZSTATE2_COASTING_1_DURATION = 10;
-    public static double ZSTATE3_RAMPING_DOWN_DURATION = 2;
-    public static double ZSTATE4_COASTING_2_DURATION = 2;
-    public static double ZSTATE5_RANDOM_1_DURATION = 2;
-    public static double ZSTATE6_RANDOM_2_DURATION = 2;
-    public static double ZSTATE7_RANDOM_3_DURATION = 2;
-    public static double ZSTATE8_REST_DURATION = 1;
+    private double lastPosition = Double.NaN;
+    private double lastVelocity = Double.NaN;
 
-    enum State {
-        RAMPING_UP,
-        COASTING_1,
-        RAMPING_DOWN,
-        COASTING_2,
-        RANDOM_1,
-        RANDOM_2,
-        RANDOM_3,
-        REST
+    private double kV;
+    private double kA;
+    private double kStatic;
+
+    private VelocityPIDF() {}
+
+    public VelocityPIDF(PIDCoefficients pid) {
+        this(pid, 0.0, 0.0, 0.0);
     }
 
-    private StateMachine stateMachine;
-
-    private ElapsedTime externalTimer = new ElapsedTime();
-
-    private double currentTargetVelo = 0.0;
-
-    public TuningController() {
-        stateMachine = new StateMachineBuilder<State>()
-                .state(State.RAMPING_UP)
-                .transitionTimed(ZSTATE1_RAMPING_UP_DURATION)
-                .onEnter(externalTimer::reset)
-                .loop(() -> {
-                    double progress = externalTimer.seconds() / ZSTATE1_RAMPING_UP_DURATION;
-                    double target = progress * (TESTING_MAX_SPEED - TESTING_MIN_SPEED) + TESTING_MIN_SPEED;
-
-                    currentTargetVelo = rpmToTicksPerSecond(target);
-                })
-
-                .state(State.COASTING_1)
-                .transitionTimed(ZSTATE2_COASTING_1_DURATION)
-                .onEnter(() -> currentTargetVelo = rpmToTicksPerSecond(TESTING_MAX_SPEED))
-
-                .state(State.RAMPING_DOWN)
-                .transitionTimed(ZSTATE3_RAMPING_DOWN_DURATION)
-                .onEnter(externalTimer::reset)
-                .loop(() -> {
-                    double progress = externalTimer.seconds() / ZSTATE3_RAMPING_DOWN_DURATION;
-                    double target = TESTING_MAX_SPEED - progress * (TESTING_MAX_SPEED - TESTING_MIN_SPEED);
-
-                    currentTargetVelo = rpmToTicksPerSecond(target);
-                })
-
-                .state(State.COASTING_2)
-                .transitionTimed(ZSTATE4_COASTING_2_DURATION)
-                .onEnter(() -> currentTargetVelo = rpmToTicksPerSecond(TESTING_MIN_SPEED))
-
-                .state(State.RANDOM_1)
-                .transitionTimed(ZSTATE5_RANDOM_1_DURATION)
-                .onEnter(() -> currentTargetVelo = rpmToTicksPerSecond(Math.random() * (TESTING_MAX_SPEED - TESTING_MIN_SPEED) + TESTING_MIN_SPEED))
-
-                .state(State.RANDOM_2)
-                .transitionTimed(ZSTATE6_RANDOM_2_DURATION)
-                .onEnter(() -> currentTargetVelo = rpmToTicksPerSecond(Math.random() * (TESTING_MAX_SPEED - TESTING_MIN_SPEED) + TESTING_MIN_SPEED))
-
-                .state(State.RANDOM_3)
-                .transitionTimed(ZSTATE7_RANDOM_3_DURATION)
-                .onEnter(() -> currentTargetVelo = rpmToTicksPerSecond(Math.random() * (TESTING_MAX_SPEED - TESTING_MIN_SPEED) + TESTING_MIN_SPEED))
-
-                .state(State.REST)
-                .transitionTimed(ZSTATE8_REST_DURATION)
-                .onEnter(() -> currentTargetVelo = 0)
-
-                .exit(State.RAMPING_UP)
-
-                .build();
-
-        stateMachine.setLooping(true);
+    public VelocityPIDF(PIDCoefficients pid, double kV) {
+        this(pid, kV, 0.0, 0.0);
     }
 
-    public void start() {
-        externalTimer.reset();
-        stateMachine.start();
+    public VelocityPIDF(PIDCoefficients pid, double kV, double kA) {
+        this(pid, kV, kA, 0.0);
     }
 
-    public double update() {
-        stateMachine.update();
+    public VelocityPIDF(PIDCoefficients pid, double kV, double kA, double kStatic) {
+        controller = new PIDFController(pid);
+        accelSamples = new MovingStatistics(ACCEL_SAMPLES);
 
-        return currentTargetVelo;
+        this.kV = kV;
+        this.kA = kA;
+        this.kStatic = kStatic;
+
+        reset();
     }
 
-    public static double rpmToTicksPerSecond(double rpm) {
-        return rpm * MOTOR_TICKS_PER_REV / MOTOR_GEAR_RATIO / 60;
+    public void setTargetAcceleration(double acceleration) {
+        controller.setTargetVelocity(acceleration);
+    }
+
+    public void setTargetVelocity(double velocity) {
+        controller.setTargetPosition(velocity);
+    }
+
+    private double calculateAccel(double measuredPosition, double measuredVelocity) {
+        double dx = measuredPosition - lastPosition;
+        if (dx != 0.0 && Math.abs(measuredVelocity - lastVelocity) > VELOCITY_EPSILON) {
+            double accel = (measuredVelocity * measuredVelocity - lastVelocity * lastVelocity) / (2.0 * dx);
+
+            lastPosition = measuredPosition;
+            lastVelocity = measuredVelocity;
+
+            accelSamples.add(accel);
+        } else {
+            accelSamples.add(0.0);
+        }
+
+        return accelSamples.getMean();
+    }
+
+    public double update(double measuredPosition, double measuredVelocity) {
+        if (Double.isNaN(lastPosition)) {
+            lastPosition = measuredPosition;
+        }
+        if (Double.isNaN(lastVelocity)) {
+            lastVelocity = measuredVelocity;
+        }
+
+        double accel = calculateAccel(measuredPosition, measuredVelocity);
+
+        double correction = controller.update(measuredVelocity, accel);
+        double feedforward = Kinematics.calculateMotorFeedforward(
+                controller.getTargetPosition(), controller.getTargetVelocity(), kV, kA, kStatic);
+        return correction + feedforward;
+    }
+
+    public void reset() {
+        controller.reset();
+
+        lastPosition = Double.NaN;
+        lastVelocity = Double.NaN;
     }
 }
