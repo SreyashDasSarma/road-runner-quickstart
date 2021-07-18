@@ -7,7 +7,6 @@ import com.acmerobotics.roadrunner.control.PIDCoefficients;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -36,8 +35,8 @@ public class VeloPID extends LinearOpMode {
         // myMotor1.setDirection(DcMotorSimple.Direction.REVERSE);
         // myMotor2.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        myMotor1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        myMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        myMotor1.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        myMotor2.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
         for (LynxModule module : hardwareMap.getAll(LynxModule.class)) {
             module.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }
@@ -88,7 +87,7 @@ public class VeloPID extends LinearOpMode {
 
                 veloController = new VelocityPIDF(MOTOR_VELO_PID, kV, kA, kStatic);
             }
-            if(motorVelo>1750&&count<4){
+            if(motorVelo>1200&&count<3){
                 //if(count>=0) {
                     slapper.setPosition(0.35);
                     sleep(100);
