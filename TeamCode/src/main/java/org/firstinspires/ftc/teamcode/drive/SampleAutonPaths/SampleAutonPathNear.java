@@ -306,6 +306,7 @@ public class SampleAutonPathNear extends LinearOpMode {
                 veloController = new VelocityPIDF(MOTOR_VELO_PID, kV, kA, kStatic);
             }if(motorVelo>=1000){
                 telemetry.addData("Prep", true);
+                //set position of flap
                 drive2.tilter.setPosition(0.715);
                 sleep(500);
                 drive2.slapper.setPosition(0.35);
