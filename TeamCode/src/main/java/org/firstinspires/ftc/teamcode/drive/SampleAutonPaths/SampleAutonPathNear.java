@@ -1,16 +1,23 @@
 package org.firstinspires.ftc.teamcode.drive.SampleAutonPaths;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.acmerobotics.roadrunner.control.PIDCoefficients;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
+import org.firstinspires.ftc.teamcode.drive.SampleAutonPaths.VeloPID.TuningController;
+import org.firstinspires.ftc.teamcode.drive.SampleAutonPaths.VeloPID.VelocityPIDF;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
 import java.util.List;
@@ -75,9 +82,23 @@ public class SampleAutonPathNear extends LinearOpMode {
         tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
         tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_FIRST_ELEMENT, LABEL_SECOND_ELEMENT);
     }
+
+    public static PIDCoefficients MOTOR_VELO_PID = new PIDCoefficients(0, 0, 0);
+
+    public static double kV = 0.00071;
+    public static double kA = 0;
+    public static double kStatic = 0;
+    private final FtcDashboard dashboard = FtcDashboard.getInstance();
+    public double lastTargetVelo;
+    public double lastKv;
+    public double lastKa ;
+    public double lastKstatic;
+    public static TuningController tuningController;
+    public static VelocityPIDF veloController;
+    private final ElapsedTime veloTimer = new ElapsedTime();
     @Override
     public void runOpMode() throws InterruptedException {
-        SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+        drive = new SampleMecanumDrive(hardwareMap);
         drive2 = new HardwareFile(hardwareMap);
         Pose2d startPose = new Pose2d(-63, -48, Math.toRadians(10));
 
@@ -97,7 +118,7 @@ public class SampleAutonPathNear extends LinearOpMode {
         Trajectory trajpickup = drive.trajectoryBuilder(startPose)
                 /*.splineTo(new Vector2d(-20 , -40),  Math.toRadians(0))
                 .splineTo(new Vector2d(-50,-48), 0)*/
-                .splineTo(new Vector2d(-12,-30), Math.toRadians(5))
+                .splineTo(new Vector2d(-45,-35), Math.toRadians(0))
                 .build();
 
         Trajectory traj0ring = drive.trajectoryBuilder(trajpickup.end())
@@ -128,19 +149,34 @@ public class SampleAutonPathNear extends LinearOpMode {
         initTfod();
         camera();
         drive2.grab();
+        for (LynxModule module : hardwareMap.getAll(LynxModule.class)) {
+            module.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+        }
+
+        veloController = new VelocityPIDF(MOTOR_VELO_PID, kV, kA, kStatic);
+        tuningController = new TuningController();
+        double lastTargetVelo = 0.0;
+        double lastKv = kV;
+        double lastKa = kA;
+        double lastKstatic = kStatic;
+        telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
         waitForStart();
         if (isStopRequested()) return;
         camera();
+        tuningController.start();
+        veloTimer.reset();
         drive2.leftIntakeHolder.setPosition(1);
         drive2.rightIntakeHolder.setPosition(0);
         sleep(2500);
         drive2.leftIntakeHolder.setPosition(0);
         drive2.rightIntakeHolder.setPosition(1);
         /*drive2.shooterflap.setPosition(0.4) ;*/
+        drive2.tilter.setPosition(0.715);
         drive.followTrajectory(trajpickup);
         drive2.leftIntakeHolder.setPosition(0.8);
         drive2.rightIntakeHolder.setPosition(0.8);
-        shooter(3);
+        drive2.shooterflap.setPosition(0.4);
+        shooterWithVelo(3);
         //
         // sleep(5000);
         //drive.followTrajectory(trajmidpow);
@@ -176,6 +212,7 @@ public class SampleAutonPathNear extends LinearOpMode {
         }
     }
     public static  HardwareFile drive2;
+    public static  SampleMecanumDrive drive;
     public static int height;
     public void camera(){
         if (tfod != null) {
@@ -234,12 +271,62 @@ public class SampleAutonPathNear extends LinearOpMode {
         for(int i=0;i<=rounds;++i){
             drive2.magup();
             drive2.magup();
-            drive2.slapper.setPosition(0.35);
+            drive2.slapper.setPosition(0.2);
             sleep(100);
             drive2.slapper.setPosition(0.5);
             sleep(1000);
         }
         drive2.shooter(0);
         drive2.magdown();
+    }
+    public void shooterWithVelo(int rds){
+        int countrds=0;
+        while (!isStopRequested() && opModeIsActive()&&countrds<=rds) {
+            double targetVelo = tuningController.update();
+            //mag.setPosition(1);
+            veloController.setTargetVelocity(targetVelo);
+            veloController.setTargetAcceleration((targetVelo - lastTargetVelo) / veloTimer.seconds());
+            veloTimer.reset();
+
+            lastTargetVelo = targetVelo;
+
+            telemetry.addData("targetVelocity", targetVelo);
+
+            double motorPos = drive2.shooter.getCurrentPosition();
+            double motorVelo = drive2.shooter.getVelocity();
+            double power = veloController.update(motorPos, motorVelo);
+            drive2.shooter.setPower(power);
+            drive2.shooter2.setPower(power);
+
+            if(lastKv != kV || lastKa != kA || lastKstatic != kStatic) {
+                lastKv = kV;
+                lastKa = kA;
+                lastKstatic = kStatic;
+
+                veloController = new VelocityPIDF(MOTOR_VELO_PID, kV, kA, kStatic);
+            }if(motorVelo>=1000){
+                telemetry.addData("Prep", true);
+                drive2.tilter.setPosition(0.715);
+                sleep(500);
+                drive2.slapper.setPosition(0.35);
+                sleep(100);
+                drive2.slapper.setPosition(0.5);
+                sleep(500);
+                //if(motorVelo<1000) {
+                    ++countrds;
+                //}
+            }else{
+                telemetry.addData("Prep", false);
+            }
+            telemetry.addData("velocity", motorVelo);
+            telemetry.addData("error", targetVelo - motorVelo);
+
+            telemetry.addData("upperBound", TuningController.rpmToTicksPerSecond(TuningController.TESTING_MAX_SPEED * 1.15));
+            telemetry.addData("lowerBound", 0);
+            telemetry.addData("CountRDS",countrds);
+            telemetry.update();
+        }
+        drive2.shooter.setPower(0);
+        drive2.shooter2.setPower(0);
     }
 }
