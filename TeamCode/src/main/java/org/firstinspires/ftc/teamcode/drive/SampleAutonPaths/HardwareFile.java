@@ -83,7 +83,7 @@ public class HardwareFile {
         shooter.setPower(shooterpower);
     }
     public void magup(){
-        tilter.setPosition(1);
+        tilter.setPosition(0.715);
     }
     public void magdown(){
         tilter.setPosition(0.5);
