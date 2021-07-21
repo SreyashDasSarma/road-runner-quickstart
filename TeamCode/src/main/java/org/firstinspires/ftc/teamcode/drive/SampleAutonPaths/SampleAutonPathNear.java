@@ -116,20 +116,22 @@ public class SampleAutonPathNear extends LinearOpMode {
                 .build();
 */
         Trajectory trajpickup = drive.trajectoryBuilder(startPose)
-                /*.splineTo(new Vector2d(-20 , -40),  Math.toRadians(0))
-                .splineTo(new Vector2d(-50,-48), 0)*/
-                .splineTo(new Vector2d(-45,-35), Math.toRadians(0))
+                .splineTo(new Vector2d(-50,-43), Math.toRadians(5))
+                .build();
+
+        Trajectory trajgrab = drive.trajectoryBuilder(trajpickup.end())
+                .splineTo(new Vector2d(-33,-40), Math.toRadians(5))
                 .build();
 
         Trajectory traj0ring = drive.trajectoryBuilder(trajpickup.end())
-                .splineTo(new Vector2d(12 , -40),  Math.toRadians(90))
+                .splineTo(new Vector2d(12 , -37),  Math.toRadians(90))
                 .build();
 
         Trajectory traj0line = drive.trajectoryBuilder(traj0ring.end())
                 .splineTo(new Vector2d(0 , -24),  Math.toRadians(90))
                 .build();
 
-        Trajectory traj1ring = drive.trajectoryBuilder(trajpickup.end())
+        Trajectory traj1ring = drive.trajectoryBuilder(trajgrab.end())
                 .splineTo(new Vector2d(18 , -30),  Math.toRadians(180))
                 .build();
 
@@ -137,7 +139,7 @@ public class SampleAutonPathNear extends LinearOpMode {
                 .splineTo(new Vector2d(0 , -24),  Math.toRadians(90))
                 .build();
 
-        Trajectory traj4ring = drive.trajectoryBuilder(trajpickup.end())
+        Trajectory traj4ring = drive.trajectoryBuilder(trajgrab.end())
                 .splineTo(new Vector2d(48 , -36),  Math.toRadians(135))
                 .build();
 
@@ -176,7 +178,7 @@ public class SampleAutonPathNear extends LinearOpMode {
         drive2.leftIntakeHolder.setPosition(0.8);
         drive2.rightIntakeHolder.setPosition(0.8);
         drive2.shooterflap.setPosition(0.4);
-        shooterWithVelo(3);
+        shooterWithVelo(3,0.4);
         //
         // sleep(5000);
         //drive.followTrajectory(trajmidpow);
@@ -194,8 +196,9 @@ public class SampleAutonPathNear extends LinearOpMode {
             drive2.rightIntakeHolder.setPosition(0);
         }else if(height==1){
             drive2.magdown();
-            /*drive.followTrajectory(trajpickup);
-            shooter(3);*/
+            drive.followTrajectory(trajgrab);
+            drive2.intake(0);
+            shooterWithVelo(1,0.43);
             drive2.magdown();
             drive.followTrajectory(traj1ring);
             wobbledrop();
@@ -204,6 +207,9 @@ public class SampleAutonPathNear extends LinearOpMode {
             drive2.rightIntakeHolder.setPosition(0);
         }else if(height==4){
             drive2.magdown();
+            drive.followTrajectory(trajgrab);
+            drive2.intake(0);
+            shooterWithVelo(3, 0.43);
             drive.followTrajectory(traj4ring);
             wobbledrop();
             drive.followTrajectory(traj4line);
@@ -279,7 +285,7 @@ public class SampleAutonPathNear extends LinearOpMode {
         drive2.shooter(0);
         drive2.magdown();
     }
-    public void shooterWithVelo(int rds){
+    public void shooterWithVelo(int rds, double flapangle){
         int countrds=0;
         while (!isStopRequested() && opModeIsActive()&&countrds<=rds) {
             double targetVelo = tuningController.update();
@@ -304,18 +310,16 @@ public class SampleAutonPathNear extends LinearOpMode {
                 lastKstatic = kStatic;
 
                 veloController = new VelocityPIDF(MOTOR_VELO_PID, kV, kA, kStatic);
-            }if(motorVelo>=1000){
+            }if(motorVelo>=1050){
                 telemetry.addData("Prep", true);
-                //set position of flap
-                drive2.tilter.setPosition(0.715);
+                drive2.tilter.setPosition(0.72);
+                drive2.shooterflap.setPosition(flapangle);
                 sleep(500);
                 drive2.slapper.setPosition(0.35);
                 sleep(100);
                 drive2.slapper.setPosition(0.5);
                 sleep(500);
-                //if(motorVelo<1000) {
-                    ++countrds;
-                //}
+                ++countrds;
             }else{
                 telemetry.addData("Prep", false);
             }
