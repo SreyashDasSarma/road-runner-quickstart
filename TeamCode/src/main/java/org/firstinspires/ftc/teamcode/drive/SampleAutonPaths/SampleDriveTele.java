@@ -86,6 +86,7 @@ public class SampleDriveTele extends LinearOpMode implements Runnable{
             for(int i=0;i<1;++i){
                 robot.magup();
                 robot.magup();
+                robot.shooterflap.setPosition(0.5);
                 sleep(2500);
                 robot.slapper.setPosition(0.35);
                 sleep(100);
@@ -104,7 +105,7 @@ public class SampleDriveTele extends LinearOpMode implements Runnable{
             robot.rightIntakeHolder.setPosition(0.5);
             guardpos=true;
         }
-        telemetry.addData("Protect:",guardpos);
+        telemetry.addData("X coord:",robot.driveTrain.getPoseEstimate());
         telemetry.update();
         robot.driveTrain.update();
     }
