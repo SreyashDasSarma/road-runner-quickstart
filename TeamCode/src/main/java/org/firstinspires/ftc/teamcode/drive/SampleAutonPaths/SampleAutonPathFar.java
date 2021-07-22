@@ -148,6 +148,9 @@ public class SampleAutonPathFar extends LinearOpMode {
             drive2.intake(1);
             sleep(1500);
             shooter(3);
+            drive2.intake(1);
+            sleep(500);
+            shooter(1);
             drive2.magdown();
             drive.followTrajectory(traj4ring);
             wobbledrop();
