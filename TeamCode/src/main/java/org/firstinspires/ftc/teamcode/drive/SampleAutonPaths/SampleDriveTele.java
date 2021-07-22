@@ -95,16 +95,6 @@ public class SampleDriveTele extends LinearOpMode implements Runnable{
             robot.shooter.setPower(0);
             robot.magdown();
         }
-        if(gamepad2.x){
-            robot.leftIntakeHolder.setPosition(1);
-            robot.rightIntakeHolder.setPosition(0);
-            guardpos=false;
-        }else if(gamepad2.b){
-            robot.leftIntakeHolder.setPosition(0.5);
-            robot.rightIntakeHolder.setPosition(0.5);
-            guardpos=true;
-        }
-        telemetry.addData("Protect:",guardpos);
         telemetry.update();
         robot.driveTrain.update();
     }
