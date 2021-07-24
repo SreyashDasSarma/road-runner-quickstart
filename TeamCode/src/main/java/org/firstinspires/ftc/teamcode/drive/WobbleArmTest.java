@@ -1,4 +1,3 @@
-//Aim: To try encoder based position movement
 package org.firstinspires.ftc.teamcode.drive;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
@@ -16,11 +15,14 @@ public class WobbleArmTest extends LinearOpMode
 {
     DcMotor leftMotor;
     //DcMotor rightMotor;
-    public static int target=0;
+    public static int target;
+    public static int angleToPosition(double angle){
+        return Math.round((int)((angle/360)*537));
+    }
     @Override
     public void runOpMode() throws InterruptedException
     {
-        leftMotor = hardwareMap.dcMotor.get("wobbleArm2");
+        leftMotor = hardwareMap.dcMotor.get("wobbleArm");
         //rightMotor = hardwareMap.dcMotor.get("right_motor");
 
         // You will need to set this based on your robot's
@@ -33,8 +35,7 @@ public class WobbleArmTest extends LinearOpMode
         //rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         // set motors to run forward for 5000 encoder counts.
-        target=90/360*1140;
-        leftMotor.setTargetPosition(1140);
+        leftMotor.setTargetPosition(angleToPosition(90));
         //rightMotor.setTargetPosition(5000);
 
         // set motors to run to target encoder position and stop with brakes on.
@@ -82,42 +83,6 @@ public class WobbleArmTest extends LinearOpMode
         {
             telemetry.addData("encoder-fwd-left-end", leftMotor.getCurrentPosition());
            // telemetry.addData("encoder-fwd-right-end", rightMotor.getCurrentPosition());
-            telemetry.update();
-            idle();
-        }
-
-        // From current position back up to starting point. In this example instead of
-        // having the motor monitor the encoder we will monitor the encoder ourselves.
-
-        leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-       // rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        leftMotor.setTargetPosition(0);
-       // rightMotor.setTargetPosition(0);
-
-        // Power sign matters again as we are running without encoder.
-        leftMotor.setPower(-0.25);
-        //rightMotor.setPower(-0.25);
-
-        while (opModeIsActive() && leftMotor.getCurrentPosition() > leftMotor.getTargetPosition())
-        {
-            telemetry.addData("encoder-back-left", leftMotor.getCurrentPosition());
-           // telemetry.addData("encoder-back-right", rightMotor.getCurrentPosition());
-            telemetry.update();
-            idle();
-        }
-
-        // set motor power to zero to stop motors.
-
-        leftMotor.setPower(0.0);
-       // rightMotor.setPower(0.0);
-
-        resetStartTime();
-
-        while (opModeIsActive() && getRuntime() < 5)
-        {
-            telemetry.addData("encoder-back-left-end", leftMotor.getCurrentPosition());
-           // telemetry.addData("encoder-back-right-end", rightMotor.getCurrentPosition());
             telemetry.update();
             idle();
         }
