@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 public class HardwareFile {
     private LinearOpMode linearOpMode;
     public DcMotor intakeMotor, shooter, transportMotor, armWobble;
-    public Servo grabberWobble, slapper, tilter;
+    public Servo grabberWobble, shooterpush;
     HardwareMap map;
     //public SampleMecanumDrive driveTrain;
     public static Pose2d robotPose = new Pose2d();
@@ -24,14 +24,13 @@ public class HardwareFile {
     }
     private void construct(HardwareMap imported){
         map = imported;
-        intakeMotor = map.get(DcMotor.class, "intakeR");
-        transportMotor = map.get(DcMotor.class, "intakeL");
-        /*shooter = map.get(DcMotor.class, "fw");
-        armWobble = map.get(DcMotor.class, "wobbleArm2");
-        grabberWobble = map.get(Servo.class, "wobbleGrabber2");
-        slapper = map.get(Servo.class, "mag");
-        tilter = map.get(Servo.class, "tilt");
-        armWobble.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);*/
+        intakeMotor = map.get(DcMotor.class, "intake");
+        transportMotor = map.get(DcMotor.class, "transport");
+        shooter = map.get(DcMotor.class, "shooter");
+        armWobble = map.get(DcMotor.class, "wobbleArm");
+        grabberWobble = map.get(Servo.class, "wobbleGrab");
+        shooterpush = map.get(Servo.class, "slapper");
+        armWobble.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
     }
     /*public void wobbleArmUp() {
@@ -58,10 +57,10 @@ public class HardwareFile {
         shooter.setPower(shooterpower);
     }
     public void magup(){
-        tilter.setPosition(1);
+        shooterpush.setPosition(1);
     }
     public void magdown(){
-        tilter.setPosition(0.5);
+        shooterpush.setPosition(0.5);
     }
 
 }
