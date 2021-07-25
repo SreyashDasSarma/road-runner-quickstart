@@ -35,11 +35,11 @@ public class TeleCode extends LinearOpMode implements Runnable{
         //setMultiplier();
         //INTAKE
         if(gamepad2.right_bumper) {
-            robot.intakeMotor.setPower(-0.6);
-            robot.transportMotor.setPower(0.6);
+            robot.intakeMotor.setPower(-1);
+            robot.transportMotor.setPower(0.9);
         }else if(gamepad2.right_trigger==1){
-            robot.intakeMotor.setPower(0.6);
-            robot.transportMotor.setPower(-0.6);
+            robot.intakeMotor.setPower(1);
+            robot.transportMotor.setPower(-0.9);
         }else{
             robot.intakeMotor.setPower(0);
             robot.transportMotor.setPower(0);
