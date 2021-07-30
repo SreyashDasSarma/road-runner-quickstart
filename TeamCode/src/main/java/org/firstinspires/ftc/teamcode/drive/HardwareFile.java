@@ -15,7 +15,7 @@ public class HardwareFile {
     public DcMotor intakeMotor, shooter, transportMotor, armWobble;
     public Servo grabberWobble, shooterpush;
     HardwareMap map;
-    //public SampleMecanumDrive driveTrain;
+    public SampleMecanumDrive driveTrain;
     public static Pose2d robotPose = new Pose2d();
 
     public HardwareFile(HardwareMap imported) {
@@ -31,7 +31,6 @@ public class HardwareFile {
         grabberWobble = map.get(Servo.class, "wobbleGrab");
         shooterpush = map.get(Servo.class, "slapper");
         armWobble.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        shooterpush.setPosition(0.85);
 
     }
     /*public void wobbleArmUp() {
@@ -39,6 +38,7 @@ public class HardwareFile {
     }
     public void wobbleArmDown() {
         armWobble.setTargetPosition(100);
+
     }
     public void wobbleArmVertical(){
         armWobble.setTargetPosition(100);
