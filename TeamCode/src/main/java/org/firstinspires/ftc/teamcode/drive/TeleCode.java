@@ -49,7 +49,7 @@ public class TeleCode extends LinearOpMode implements Runnable{
             robot.grabberWobble.setPosition(0.13);
            // sleep(500);
            // robot.armWobble.setTargetPosition(1);
-        }/*
+        }
         if(gamepad2.left_bumper){
             robot.shooter.setPower(1);
             sleep(500);
@@ -73,7 +73,7 @@ public class TeleCode extends LinearOpMode implements Runnable{
             }
             robot.shooter.setPower(0);
         }
-        telemetry.update();*/
+        telemetry.update();
         robot.driveTrain.update();
     }
     private void setMultiplier() {
