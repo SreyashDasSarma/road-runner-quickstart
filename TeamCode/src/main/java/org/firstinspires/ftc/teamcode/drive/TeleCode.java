@@ -54,9 +54,9 @@ public class TeleCode extends LinearOpMode implements Runnable{
             robot.shooter.setPower(1);
             sleep(500);
             for(int i=0;i<=3;++i){
-                robot.shooterpush.setPosition(0.35);
+                robot.shooterpush.setPosition(0.4);
                 sleep(100);
-                robot.shooterpush.setPosition(0.5);
+                robot.shooterpush.setPosition(0.9);
                 sleep(1500);
             }
             robot.shooter.setPower(0);
@@ -66,9 +66,9 @@ public class TeleCode extends LinearOpMode implements Runnable{
             sleep(500);
             for(int i=0;i<1;++i){
                 sleep(2500);
-                robot.shooterpush.setPosition(0.35);
+                robot.shooterpush.setPosition(0.4);
                 sleep(100);
-                robot.shooterpush.setPosition(0.5);
+                robot.shooterpush.setPosition(0.9);
                 sleep(1500);
             }
             robot.shooter.setPower(0);
