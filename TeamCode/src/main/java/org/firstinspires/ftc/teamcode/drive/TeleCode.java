@@ -12,7 +12,7 @@ public class TeleCode extends LinearOpMode implements Runnable{
     @Override
     public void runOpMode() throws InterruptedException {
         robot = new HardwareFile(hardwareMap);
-        robot.driveTrain = new SampleMecanumDrive(hardwareMap);
+        robot.driveTrain=new SampleMecanumDrive(hardwareMap);
         waitForStart();
         while (opModeIsActive()) {
             run();
@@ -34,7 +34,7 @@ public class TeleCode extends LinearOpMode implements Runnable{
         if(gamepad2.right_bumper) {
             robot.intakeMotor.setPower(-1);
             robot.transportMotor.setPower(0.9);
-        }else if(gamepad2.left_bumper){
+        }else if(gamepad2.right_trigger==1){
             robot.intakeMotor.setPower(1);
             robot.transportMotor.setPower(-0.9);
         }else{
@@ -43,27 +43,29 @@ public class TeleCode extends LinearOpMode implements Runnable{
         }
         if(gamepad2.a){
             robot.armWobble.setPosition(1);
-        }
-        if (gamepad2.y){
-            robot.armWobble.setPosition(0.5);
+           // sleep(500);
+            robot.grabberWobble.setPosition(0.63);
+        }else if(gamepad2.y){
+            robot.grabberWobble.setPosition(0.13);
+           // sleep(500);
+            robot.armWobble.setPosition(0.4);
         }
         if(gamepad2.left_bumper){
-            robot.shooter.setPower(1);
-            robot.shooter.setPower(0.4);
+            robot.shooter.setPower(0.71);
             sleep(500);
-            for(int i = 0; i < 1;++i){
-                sleep(2500);
+            for(int i=0;i<=3;++i){
                 robot.shooterpush.setPosition(0.4);
                 sleep(100);
                 robot.shooterpush.setPosition(0.9);
                 sleep(1500);
-
             }
             robot.shooter.setPower(0);
         }
         if(gamepad2.dpad_up){
+            robot.shooter.setPower(0.4);
             sleep(500);
-            for(int i=0;i<=3;++i){
+            for(int i=0;i<1;++i){
+                sleep(2500);
                 robot.shooterpush.setPosition(0.4);
                 sleep(100);
                 robot.shooterpush.setPosition(0.9);
