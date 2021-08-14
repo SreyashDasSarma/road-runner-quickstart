@@ -12,8 +12,8 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
 public class HardwareFile {
     private LinearOpMode linearOpMode;
-    public DcMotor intakeMotor, shooter, transportMotor, armWobble;
-    public Servo grabberWobble, shooterpush;
+    public DcMotor intakeMotor, shooter, transportMotor;
+    public Servo armWobble, grabberWobble, shooterpush;
     HardwareMap map;
     public SampleMecanumDrive driveTrain;
     public static Pose2d robotPose = new Pose2d();
@@ -27,11 +27,11 @@ public class HardwareFile {
         intakeMotor = map.get(DcMotor.class, "intake");
         transportMotor = map.get(DcMotor.class, "transfer");
         shooter = map.get(DcMotor.class, "shooter");
-        armWobble = map.get(DcMotor.class, "wobbleArm");
+        armWobble = map.get(Servo.class, "wobblearm");
         grabberWobble = map.get(Servo.class, "wobbleGrab");
         shooterpush = map.get(Servo.class, "slapper");
-        armWobble.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         shooterpush.setPosition(0.85);
+        armWobble.setPosition(0.5);
 
     }
     /*public void wobbleArmUp() {
